@@ -9,6 +9,7 @@ const STAMP_ID = '6c3f24ccaae3b84206ca28776dd4c626deeeedea470f2ff400727a46f47310
 
 
 function App() {
+    // # nugaon # mollas # metacertain
     const [bee, setBee] = useState<Bee>(new Bee('http://localhost:1633'))
     const [privkey, setPrivkey] = useState<Uint8Array>(randomBytes(32))
     const [wallet, setWallet] = useState<Wallet>(new Wallet())
