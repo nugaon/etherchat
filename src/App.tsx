@@ -2,7 +2,7 @@ import React, { ChangeEvent, ChangeEventHandler, useEffect, useState } from 'rea
 import logo from './logo.svg';
 import { randomBytes } from 'crypto'
 import './App.css';
-import { Bee } from '@ethersphere/bee-js';
+import { Bee, Utils } from '@ethersphere/bee-js';
 import Wallet from 'ethereumjs-wallet';
 
 const STAMP_ID = '6c3f24ccaae3b84206ca28776dd4c626deeeedea470f2ff400727a46f47310d9'
@@ -20,7 +20,7 @@ function App() {
             console.error('nincs keyed haver')
             return
         }
-        const feedWriter = bee.makeFeedWriter("sequence", new TextEncoder().encode(otherEthAddress), privkey)
+        const feedWriter = bee.makeFeedWriter("sequence", Utils.hexToBytes(otherEthAddress), privkey)
         const { reference } = await bee.uploadData(STAMP_ID, new TextEncoder().encode(message))
         const result = await feedWriter.upload(STAMP_ID, reference)
 
@@ -30,10 +30,10 @@ function App() {
     useEffect(() => {
         const windowPrivKey = window.localStorage.getItem('private_key')
         if (windowPrivKey) {
-            setPrivkey(new TextEncoder().encode(windowPrivKey))
+            setPrivkey(Utils.hexToBytes(windowPrivKey))
         } else {
             const key = randomBytes(32)
-            window.localStorage.setItem('private_key', new TextDecoder().decode(key))
+            window.localStorage.setItem('private_key', Utils.bytesToHex(key))
             setPrivkey(key)
             setWallet(new Wallet(key))
         }
