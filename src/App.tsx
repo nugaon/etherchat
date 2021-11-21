@@ -20,12 +20,28 @@ function App() {
             console.error('nincs keyed haver')
             return
         }
-        const feedWriter = bee.makeFeedWriter("sequence", Utils.hexToBytes(otherEthAddress), privkey)
+        console.log('other eth address', otherEthAddress)
+        const hashTopic = Utils.keccak256Hash(Utils.hexToBytes(otherEthAddress))
+        const feedWriter = bee.makeFeedWriter("sequence", hashTopic, privkey)
+        console.log('hash topic', Utils.bytesToHex(hashTopic))
         const { reference } = await bee.uploadData(STAMP_ID, new TextEncoder().encode(message))
+        console.log('uploaded swarm reference', reference)
         const result = await feedWriter.upload(STAMP_ID, reference)
 
         console.log('feed upload', result)
     }
+
+    async function refreshButton() {
+        if (!otherEthAddress) {
+            console.error('nincs keyed haver')
+            return
+        }
+        const hashTopic = Utils.keccak256Hash(Utils.hexToBytes(otherEthAddress))
+        const feedReader = await bee.makeFeedReader("sequence", hashTopic, '0x30a831b09fca2f8a69cb5c00d503f8ae00c3052c')
+        const latest = await feedReader.download()
+
+        console.log('latest', latest)
+    }  
 
     useEffect(() => {
         const windowPrivKey = window.localStorage.getItem('private_key')
@@ -64,14 +80,14 @@ function App() {
 
 
                 <div className="write">
-                    <input type="textarea" id="chatinput" value="" placeholder="Type a message..." />
                     <div className="sendcontainer-desktop">
                         <button onClick={() => sendButtonOnClick(bee)} className="sendButton">Send &uarr;</button>
                     </div>
-                    <div className="sendcontainer">
-                        <button className="sendButton">&uarr;</button>
+                </div>
+                <div className="read">
+                    <div>
+                    <button onClick={refreshButton} className="refreshButton">load;</button>
                     </div>
-
                 </div>
             </div>
         </div>
