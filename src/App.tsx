@@ -14,6 +14,7 @@ function App() {
     const [wallet, setWallet] = useState<Wallet>(new Wallet())
     const [otherEthAddress, setOtherEthAddress] = useState<string | null>(null)
     const [message, setMessage] = useState<string>('')
+    const [lastOtherMessage, setLastOtherMessage] = useState<string>('')
 
     async function sendButtonOnClick(bee: Bee) {
         if (!otherEthAddress) {
@@ -36,17 +37,24 @@ function App() {
             console.error('nincs keyed haver')
             return
         }
-        const hashTopic = Utils.keccak256Hash(Utils.hexToBytes(otherEthAddress))
-        const feedReader = await bee.makeFeedReader("sequence", hashTopic, '0x30a831b09fca2f8a69cb5c00d503f8ae00c3052c')
+        console.log('myethaddress wallet', wallet)
+        const myEthAddress = wallet.getAddress()
+        const hashTopic = Utils.keccak256Hash(myEthAddress)
+        console.log('hastopic', Utils.bytesToHex(hashTopic))
+        const feedReader = bee.makeFeedReader("sequence", hashTopic, otherEthAddress)
         const latest = await feedReader.download()
 
         console.log('latest', latest)
+        const bytes = await bee.downloadData(latest.reference)
+        setLastOtherMessage(new TextDecoder().decode(bytes))
     }  
 
     useEffect(() => {
         const windowPrivKey = window.localStorage.getItem('private_key')
         if (windowPrivKey) {
-            setPrivkey(Utils.hexToBytes(windowPrivKey))
+            const privKeyBytes = Utils.hexToBytes(windowPrivKey)
+            setPrivkey(privKeyBytes)
+            setWallet(new Wallet(Buffer.from(privKeyBytes)))
         } else {
             const key = randomBytes(32)
             window.localStorage.setItem('private_key', Utils.bytesToHex(key))
@@ -86,6 +94,7 @@ function App() {
                 </div>
                 <div className="read">
                     <div>
+                        last message from your bro: "{lastOtherMessage}" <br/>
                     <button onClick={refreshButton} className="refreshButton">load;</button>
                     </div>
                 </div>
