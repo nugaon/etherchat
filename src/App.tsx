@@ -68,7 +68,7 @@ function App() {
       setMyEthAddress(Utils.bytesToHex(wallet.getAddress()))
     }
 
-    if (window.swarm && window.location.pathname.includes('/bzz/')) {
+    if (window.swarm && !window.origin) {
       const beeUrl = window.swarm.web2Helper.fakeBeeApiAddress()
       setBee(new Bee(beeUrl))
       ;(async () => {
