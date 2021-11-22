@@ -1,7 +1,8 @@
 import { Bee, Utils } from '@ethersphere/bee-js'
 import { randomBytes } from 'crypto'
 import Wallet from 'ethereumjs-wallet'
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import { Button, Container, Form, FormControl, InputGroup, Stack } from 'react-bootstrap'
 import './App.css'
 
 /** Handled by the gateway proxy or swarm-extension */
@@ -18,7 +19,9 @@ function App() {
   const [lastOtherMessage, setLastOtherMessage] = useState<string>('')
   const [myEthAddress, setMyEthAddress] = useState<string>('')
 
-  async function sendButtonOnClick() {
+  async function sendButtonOnClick(e: FormEvent) {
+    e.preventDefault()
+
     if (!otherEthAddress) {
       console.error('nincs keyed haver')
 
@@ -33,10 +36,13 @@ function App() {
     const result = await feedWriter.upload(STAMP_ID, reference)
 
     console.log('feed upload', result)
+    setMessage('')
   }
 
-  async function refreshButton() {
-    if (!otherEthAddress) {
+  async function refreshOthersMessage() {
+    console.log('other eth address', otherEthAddress)
+
+    if (!otherEthAddress || otherEthAddress.length === 0) {
       console.error('nincs keyed haver')
 
       return
@@ -104,39 +110,52 @@ function App() {
   }
 
   return (
-    <div className="mainContainer">
-      <div id="chat" className="chat">
-        <div className="logo"></div>
+    <Container className="App" fluid>
+      <div className="App-header">
+        <h1 id="purityweb-logo" className="fadeInDown animated">
+          EtherChat
+        </h1>
+      </div>
 
-        <div>
-          Your ETH address is <b>{myEthAddress}</b>
-        </div>
+      <Container className="maincontent">
+        <Stack gap={2}>
+          <div>Your ETH address is</div>
+          <div className="font-weight-bold">{myEthAddress}</div>
+        </Stack>
 
-        <div>
-          ETH Address
-          <input type="text" value={otherEthAddress || ''} onChange={onEthAddressChange} />
-        </div>
-        <div>
-          <input type="text" value={message} onChange={onMessageChange} />
-        </div>
+        <hr />
 
-        <div className="write">
-          <div className="sendcontainer-desktop">
-            <button onClick={sendButtonOnClick} className="sendButton">
-              Send &uarr;
-            </button>
-          </div>
-        </div>
+        <Form.Label htmlFor="basic-url">Ethereum address of your chatpartner</Form.Label>
+        <FormControl
+          id="basic-url"
+          aria-describedby="basic-addon3"
+          value={otherEthAddress || ''}
+          onChange={onEthAddressChange}
+        />
+
+        <hr />
+
         <div className="read">
           <div>
             last message from your bro: "{lastOtherMessage}" <br />
-            <button onClick={refreshButton} className="refreshButton">
-              Load
-            </button>
+            <Button onClick={refreshOthersMessage} className="refreshButton">
+              Refresh
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+
+        <hr />
+
+        <Form onSubmit={sendButtonOnClick}>
+          <InputGroup>
+            <FormControl aria-describedby="basic-addon2" value={message} onChange={onMessageChange} />
+            <Button variant="outline-secondary primary" id="button-addon2" type="submit">
+              Send
+            </Button>
+          </InputGroup>
+        </Form>
+      </Container>
+    </Container>
   )
 }
 
