@@ -2,6 +2,7 @@
   "name": "swapchat-reloaded",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@ethersphere/bee-js": "^2.1.1",
     "@testing-library/jest-dom": "^5.15.0",
