@@ -74,15 +74,14 @@ function App() {
       setMyEthAddress(Utils.bytesToHex(wallet.getAddress()))
     }
 
-    if (window.swarm && !window.origin) {
+    if (window.swarm && window.origin === 'null') {
       const beeUrl = window.swarm.web2Helper.fakeBeeApiAddress()
       setBee(new Bee(beeUrl))
       ;(async () => {
-        const windowPrivKey = await window.swarm.localStorage.getItem('private_key')
-
-        if (windowPrivKey) {
+        try {
+          const windowPrivKey = await window.swarm.localStorage.getItem('private_key')
           setStringKey(windowPrivKey)
-        } else {
+        } catch (e) {
           const key = randomBytes(32)
           await window.swarm.localStorage.setItem('private_key', Utils.bytesToHex(key))
           setByteKey(key)
