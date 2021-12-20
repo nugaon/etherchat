@@ -3,7 +3,7 @@ import { Bytes } from '@ethersphere/bee-js/dist/src/utils/bytes'
 import { randomBytes } from 'crypto'
 import Wallet from 'ethereumjs-wallet'
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
-import { Button, Col, Container, Form, FormControl, InputGroup, Row, Stack } from 'react-bootstrap'
+import { Button, Col, Container, Form, FormControl, InputGroup, Row, Spinner, Stack } from 'react-bootstrap'
 import './App.css'
 
 /** Handled by the gateway proxy or swarm-extension */
@@ -83,9 +83,11 @@ function App() {
   const [listMessages, setListMessages] = useState<MessageBoxProps[]>([])
   const [myEthAddress, setMyEthAddress] = useState<string>('')
   const [loadSendMessage, setLoadSendMessage] = useState<boolean>(false)
+  const [loadListMessages, setLoadListMessages] = useState<boolean>(false)
 
   async function sendButtonOnClick(e: FormEvent) {
     e.preventDefault()
+    setLoadSendMessage(true)
 
     if (!otherEthAddress) {
       console.error('nincs keyed haver')
@@ -105,16 +107,17 @@ function App() {
     console.log('feed upload', result)
     setMessage('')
     setMyMessages([...myMessages, messageFormat])
+    setLoadSendMessage(false)
   }
 
   async function refreshOthersMessage() {
-    console.log('other eth address', otherEthAddress)
-
     if (!otherEthAddress || otherEthAddress.length === 0) {
       console.error('nincs keyed haver')
 
       return
     }
+
+    setLoadListMessages(true)
     const myEthAddress = wallet.getAddress()
     const hashTopicAtBro = Utils.keccak256Hash(myEthAddress)
     const feedReaderBro = bee.makeFeedReader('sequence', hashTopicAtBro, otherEthAddress)
@@ -152,6 +155,8 @@ function App() {
         console.log('No message from me', e)
       }
     }
+
+    setLoadListMessages(false)
   }
 
   // constructor
@@ -263,14 +268,25 @@ function App() {
               <Col style={{ textAlign: 'left', fontWeight: 'bold' }}>You</Col>
               <Col style={{ textAlign: 'right', fontWeight: 'bold' }}>Bro</Col>
             </Row>
-            <div>
+            <div style={{ padding: '12px 0' }}>
               {listMessages.map(listMessage => (
                 <div key={`${listMessage.date}|${listMessage.position}`} style={{ textAlign: listMessage.position }}>
-                  {listMessage.text}
+                  <span
+                    className={listMessage.position === 'right' ? 'bg-primary' : 'bg-secondary'}
+                    style={{
+                      borderRadius: 5,
+                      padding: 5,
+                    }}
+                  >
+                    {listMessage.text}
+                  </span>
                 </div>
               ))}
             </div>
-            <Button onClick={refreshOthersMessage} className="refreshButton">
+            <div style={{ minHeight: 42 }}>
+              <Spinner animation="grow" hidden={!loadListMessages} />
+            </div>
+            <Button onClick={refreshOthersMessage} className="refreshButton" disabled={loadListMessages}>
               Refresh
             </Button>
           </div>
@@ -280,9 +296,23 @@ function App() {
 
         <Form onSubmit={sendButtonOnClick}>
           <InputGroup>
-            <FormControl aria-describedby="basic-addon2" value={message} onChange={onMessageChange} />
-            <Button variant="outline-secondary primary" id="button-addon2" type="submit">
-              Send
+            <FormControl
+              aria-describedby="basic-addon2"
+              value={message}
+              onChange={onMessageChange}
+              disabled={loadSendMessage}
+            />
+            <Button disabled={loadSendMessage} variant="outline-secondary primary" id="button-addon2" type="submit">
+              Send{' '}
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+                variant="primary"
+                hidden={!loadSendMessage}
+              />
             </Button>
           </InputGroup>
         </Form>
