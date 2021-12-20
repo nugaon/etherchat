@@ -167,13 +167,11 @@ function App() {
 
       // fetch older messages
       // from the other guy
-      console.log('feedIndex', latestBro.feedIndex)
       let fetchCount = fetchIndexToInt(latestBro.feedIndex) - otherLastFetchIndex
 
       if (fetchCount > 3) fetchCount = 3
       otherLastFetchIndex = fetchIndexToInt(latestBro.feedIndex)
       await saveLocalStorage('other_last_fetch_index', String(otherLastFetchIndex))
-      console.log('fetchcount', fetchCount)
 
       const otherOlderMessages: MessageFormat[] = []
       const socReader = bee.makeSOCReader(otherEthAddress)
@@ -184,6 +182,7 @@ function App() {
         const bytes = await bee.downloadData(olderMessageReferene)
         otherOlderMessages.push(decodeMessage(bytes))
       }
+      //download latest message
       const bytes = await bee.downloadData(latestBro.reference)
       const othersLatestMessage = decodeMessage(bytes)
       setOtherMessages([...otherOlderMessages, othersLatestMessage])
@@ -198,11 +197,26 @@ function App() {
       const feedReaderMine = bee.makeFeedReader('sequence', hashTopicAtMine, myEthAddress)
       try {
         const latesMine = await feedReaderMine.download()
+
+        let fetchCount = fetchIndexToInt(latesMine.feedIndex) - mineLastFetchIndex
+
+        if (fetchCount > 3) fetchCount = 3
         mineLastFetchIndex = fetchIndexToInt(latesMine.feedIndex)
         await saveLocalStorage('mine_last_fetch_index', String(mineLastFetchIndex))
 
+        const otherOlderMessages: MessageFormat[] = []
+        const socReader = bee.makeSOCReader(myEthAddress)
+        const identifiers = previousIdentifiers(hashTopicAtMine, fetchIndexToInt(latesMine.feedIndex), fetchCount)
+        for (const identifier of identifiers) {
+          const olderUpdatePayload = (await socReader.download(identifier)).payload()
+          const olderMessageReferene = Utils.bytesToHex(olderUpdatePayload.slice(-32))
+          const bytes = await bee.downloadData(olderMessageReferene)
+          otherOlderMessages.push(decodeMessage(bytes))
+        }
+
         const bytes = await bee.downloadData(latesMine.reference)
-        setMyMessages([decodeMessage(bytes)])
+        const myLatestMessage = decodeMessage(bytes)
+        setMyMessages([...otherOlderMessages, myLatestMessage])
       } catch (e) {
         console.log('No message from me', e)
       }
@@ -340,7 +354,7 @@ function App() {
                       padding: 5,
                     }}
                   >
-                    {listMessage.text} in time {listMessage.date.getTime()}
+                    {listMessage.text}
                   </span>
                 </div>
               ))}
