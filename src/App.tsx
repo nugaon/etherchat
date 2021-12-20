@@ -24,6 +24,38 @@ function makeBytes<Length extends number>(length: Length): Bytes<Length> {
   return new Uint8Array(length) as Bytes<Length>
 }
 
+async function saveLocalStorage(key: string, value: string): Promise<void> {
+  if (window.swarm && window.origin === 'null') {
+    await window.swarm.localStorage.setItem(key, value)
+  } else {
+    window.localStorage.setItem(key, value)
+  }
+}
+
+async function loadLocalStorage(key: string): Promise<string | null> {
+  if (window.swarm && window.origin === 'null') {
+    const item = await window.swarm.localStorage.getItem(key)
+
+    return item
+  } else {
+    return window.localStorage.getItem(key)
+  }
+}
+
+function fetchIndexToInt(fetchIndex: string): number {
+  const indexBytes = Utils.hexToBytes(fetchIndex)
+  let index = 0
+  for (let i = indexBytes.length - 1; i >= 0; i--) {
+    const byte = indexBytes[i]
+
+    if (byte === 0) break
+
+    index += byte
+  }
+
+  return index
+}
+
 function writeUint64BigEndian(value: number, bytes: Bytes<8> = makeBytes(8)): Bytes<8> {
   const dataView = new DataView(bytes.buffer)
   const valueLower32 = value & 0xffffffff
@@ -84,16 +116,25 @@ function App() {
   const [myEthAddress, setMyEthAddress] = useState<string>('')
   const [loadSendMessage, setLoadSendMessage] = useState<boolean>(false)
   const [loadListMessages, setLoadListMessages] = useState<boolean>(false)
+  let otherLastFetchIndex = 0
+  let mineLastFetchIndex = 0
 
   async function sendButtonOnClick(e: FormEvent) {
     e.preventDefault()
-    setLoadSendMessage(true)
 
     if (!otherEthAddress) {
       console.error('nincs keyed haver')
 
       return
     }
+
+    if (!message) {
+      console.error('no message')
+
+      return
+    }
+
+    setLoadSendMessage(true)
     const hashTopic = Utils.keccak256Hash(Utils.hexToBytes(otherEthAddress))
     const feedWriter = bee.makeFeedWriter('sequence', hashTopic, privkey)
     const messageFormat: MessageFormat = {
@@ -126,9 +167,17 @@ function App() {
 
       // fetch older messages
       // from the other guy
+      console.log('feedIndex', latestBro.feedIndex)
+      let fetchCount = fetchIndexToInt(latestBro.feedIndex) - otherLastFetchIndex
+
+      if (fetchCount > 3) fetchCount = 3
+      otherLastFetchIndex = fetchIndexToInt(latestBro.feedIndex)
+      await saveLocalStorage('other_last_fetch_index', String(otherLastFetchIndex))
+      console.log('fetchcount', fetchCount)
+
       const otherOlderMessages: MessageFormat[] = []
       const socReader = bee.makeSOCReader(otherEthAddress)
-      const identifiers = previousIdentifiers(hashTopicAtBro, Number(latestBro.feedIndex), 1)
+      const identifiers = previousIdentifiers(hashTopicAtBro, fetchIndexToInt(latestBro.feedIndex), fetchCount)
       for (const identifier of identifiers) {
         const olderUpdatePayload = (await socReader.download(identifier)).payload()
         const olderMessageReferene = Utils.bytesToHex(olderUpdatePayload.slice(-32))
@@ -149,6 +198,9 @@ function App() {
       const feedReaderMine = bee.makeFeedReader('sequence', hashTopicAtMine, myEthAddress)
       try {
         const latesMine = await feedReaderMine.download()
+        mineLastFetchIndex = fetchIndexToInt(latesMine.feedIndex)
+        await saveLocalStorage('mine_last_fetch_index', String(mineLastFetchIndex))
+
         const bytes = await bee.downloadData(latesMine.reference)
         setMyMessages([decodeMessage(bytes)])
       } catch (e) {
@@ -180,6 +232,7 @@ function App() {
       const beeUrl = window.swarm.web2Helper.fakeBeeApiAddress()
       setBee(new Bee(beeUrl))
       ;(async () => {
+        //private key handling
         const windowPrivKey = await window.swarm.localStorage.getItem('private_key')
 
         if (windowPrivKey) {
@@ -189,6 +242,9 @@ function App() {
           await window.swarm.localStorage.setItem('private_key', Utils.bytesToHex(key))
           setByteKey(key)
         }
+        //last fetched index handling
+        mineLastFetchIndex = Number(await window.swarm.localStorage.getItem('mine_last_fetch_index'))
+        otherLastFetchIndex = Number(await window.swarm.localStorage.getItem('other_last_fetch_index'))
       })()
     } else {
       const windowPrivKey = window.localStorage.getItem('private_key')
@@ -200,6 +256,9 @@ function App() {
         window.localStorage.setItem('private_key', Utils.bytesToHex(key))
         setByteKey(key)
       }
+      //last fetched index handling
+      mineLastFetchIndex = Number(window.localStorage.getItem('mine_last_fetch_index'))
+      otherLastFetchIndex = Number(window.localStorage.getItem('other_last_fetch_index'))
     }
   }, [])
 
@@ -270,7 +329,10 @@ function App() {
             </Row>
             <div style={{ padding: '12px 0' }}>
               {listMessages.map(listMessage => (
-                <div key={`${listMessage.date}|${listMessage.position}`} style={{ textAlign: listMessage.position }}>
+                <div
+                  key={`${listMessage.date}|${listMessage.position}`}
+                  style={{ textAlign: listMessage.position, margin: '12px 0' }}
+                >
                   <span
                     className={listMessage.position === 'right' ? 'bg-primary' : 'bg-secondary'}
                     style={{
@@ -278,7 +340,7 @@ function App() {
                       padding: 5,
                     }}
                   >
-                    {listMessage.text}
+                    {listMessage.text} in time {listMessage.date.getTime()}
                   </span>
                 </div>
               ))}
