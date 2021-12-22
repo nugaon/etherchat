@@ -171,6 +171,7 @@ export default function ListMessages({
             </div>
           ))}
         </div>
+        <div hidden={listMessages.length > 0}>There are no loaded messages yet. Smash the Refresh button.</div>
         <div style={{ minHeight: 42 }}>
           <Spinner animation="grow" hidden={!loadListMessages} />
         </div>
