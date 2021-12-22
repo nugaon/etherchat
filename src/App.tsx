@@ -93,7 +93,7 @@ function App() {
             aria-describedby="basic-addon3"
             value={otherEthAddress || ''}
             onChange={onEthAddressChange}
-            style={{ textAlign: 'center', minWidth: 400 }}
+            style={{ textAlign: 'center' }}
           />
         </div>
 
