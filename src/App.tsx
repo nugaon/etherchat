@@ -86,32 +86,37 @@ function App() {
 
         <hr />
 
-        <Form.Label htmlFor="basic-url">Ethereum address of your chatpartner</Form.Label>
-        <FormControl
-          id="basic-url"
-          aria-describedby="basic-addon3"
-          value={otherEthAddress || ''}
-          onChange={onEthAddressChange}
-        />
+        <div className="centerDiv">
+          <Form.Label htmlFor="basic-url">Ethereum address of your chatpartner</Form.Label>
+          <FormControl
+            id="basic-url"
+            aria-describedby="basic-addon3"
+            value={otherEthAddress || ''}
+            onChange={onEthAddressChange}
+            style={{ textAlign: 'center', minWidth: 400 }}
+          />
+        </div>
 
         <hr />
 
-        <ListMessages
-          bee={bee}
-          myEthAddress={myEthAddress}
-          othersEthAddress={otherEthAddress}
-          myMessages={myMessages}
-          setMyMessages={setMyMessages}
-        />
+        <div style={{ maxWidth: 300 }} className="centerDiv">
+          <ListMessages
+            bee={bee}
+            myEthAddress={myEthAddress}
+            othersEthAddress={otherEthAddress}
+            myMessages={myMessages}
+            setMyMessages={setMyMessages}
+          />
 
-        <hr />
+          <hr />
 
-        <SendMessage
-          bee={bee}
-          otherEthAddress={otherEthAddress}
-          privKey={privkey}
-          onSendMessage={message => setMyMessages([...myMessages, message])}
-        />
+          <SendMessage
+            bee={bee}
+            otherEthAddress={otherEthAddress}
+            privKey={privkey}
+            onSendMessage={message => setMyMessages([...myMessages, message])}
+          />
+        </div>
       </Container>
     </Container>
   )

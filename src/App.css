@@ -31,3 +31,8 @@
 .font-weight-bold {
   font-weight: bold;
 }
+
+.centerDiv {
+  justify-content: center;
+  display: inline-block;
+}

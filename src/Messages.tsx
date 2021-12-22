@@ -163,6 +163,7 @@ export default function ListMessages({
                 style={{
                   borderRadius: 5,
                   padding: 5,
+                  overflowWrap: 'break-word',
                 }}
               >
                 {listMessage.text}
