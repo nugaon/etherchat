@@ -1,14 +1,11 @@
 import { Bee, Utils } from '@ethersphere/bee-js'
 import { randomBytes } from 'crypto'
 import Wallet from 'ethereumjs-wallet'
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
-import { Button, Container, Form, FormControl, InputGroup, Spinner, Stack } from 'react-bootstrap'
+import React, { ChangeEvent, useEffect, useState } from 'react'
+import { Container, Form, FormControl, Stack } from 'react-bootstrap'
 import './App.css'
 import ListMessages from './Messages'
-import { encodeMessage, hashTopicForMessage } from './Utils'
-
-/** Handled by the gateway proxy or swarm-extension */
-const STAMP_ID = '0000000000000000000000000000000000000000000000000000000000000000'
+import SendMessage from './SendMessage'
 
 function App() {
   // # nugaon # mollas # metacertain
@@ -17,42 +14,8 @@ function App() {
   const [privkey, setPrivkey] = useState<Uint8Array>(randomBytes(32))
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [otherEthAddress, setOtherEthAddress] = useState<string | null>(null)
-  const [message, setMessage] = useState<string>('')
   const [myMessages, setMyMessages] = useState<MessageFormat[]>([])
   const [myEthAddress, setMyEthAddress] = useState<string | null>(null)
-  const [loadSendMessage, setLoadSendMessage] = useState<boolean>(false)
-
-  async function sendButtonOnClick(e: FormEvent) {
-    e.preventDefault()
-
-    if (!otherEthAddress) {
-      console.error('nincs keyed haver')
-
-      return
-    }
-
-    if (!message) {
-      console.error('no message')
-
-      return
-    }
-
-    setLoadSendMessage(true)
-    const hashTopic = hashTopicForMessage(otherEthAddress)
-    const feedWriter = bee.makeFeedWriter('sequence', hashTopic, privkey)
-    const messageFormat: MessageFormat = {
-      message,
-      timestamp: new Date().getTime(),
-    }
-    const { reference } = await bee.uploadData(STAMP_ID, encodeMessage(messageFormat.message, messageFormat.timestamp))
-    console.log('uploaded swarm reference of the message', reference)
-    const result = await feedWriter.upload(STAMP_ID, reference)
-
-    console.log('feed upload', result)
-    setMessage('')
-    setMyMessages([...myMessages, messageFormat])
-    setLoadSendMessage(false)
-  }
 
   // constructor
   useEffect(() => {
@@ -107,10 +70,6 @@ function App() {
     //other's messages are set in the listMessages
   }
 
-  const onMessageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value)
-  }
-
   return (
     <Container className="App" fluid>
       <div className="App-header">
@@ -147,28 +106,12 @@ function App() {
 
         <hr />
 
-        <Form onSubmit={sendButtonOnClick}>
-          <InputGroup>
-            <FormControl
-              aria-describedby="basic-addon2"
-              value={message}
-              onChange={onMessageChange}
-              disabled={loadSendMessage}
-            />
-            <Button disabled={loadSendMessage} variant="outline-secondary primary" id="button-addon2" type="submit">
-              Send{' '}
-              <Spinner
-                as="span"
-                animation="border"
-                size="sm"
-                role="status"
-                aria-hidden="true"
-                variant="primary"
-                hidden={!loadSendMessage}
-              />
-            </Button>
-          </InputGroup>
-        </Form>
+        <SendMessage
+          bee={bee}
+          otherEthAddress={otherEthAddress}
+          privKey={privkey}
+          onSendMessage={message => setMyMessages([...myMessages, message])}
+        />
       </Container>
     </Container>
   )
