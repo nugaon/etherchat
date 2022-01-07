@@ -1,6 +1,14 @@
-# Getting Started with Create React App
+# EtherChat
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This little application allows you to chat with another person on the P2P network Ethereum Swarm.
+
+One can also connect their web3 wallet to send messages to any other arbitrary ethereum address.
+
+The messages currently are not encrypted on the P2P network, though the "mining" of these messages quite cumbersome.
+
+The application is compatible with [swarm-extension](https://github.com/ethersphere/swarm-extension).
+
+[Demo](https://bah5qcgza56nnfxjw7tftckrw7xclh67cibcdmzehgtcaihvlnvxohzrc53gq.bzz.link/)
 
 ## Available Scripts
 
