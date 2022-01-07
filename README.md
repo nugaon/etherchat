@@ -6,7 +6,7 @@ One can also connect their web3 wallet to send messages to any other arbitrary e
 
 The messages currently are not encrypted on the P2P network, though the "mining" of these messages quite cumbersome.
 
-The application is compatible with [swarm-extension](https://github.com/ethersphere/swarm-extension).
+The application is compatible with [swarm-extension](https://github.com/ethersphere/swarm-extension) that is handy if you do not want to have a middleman between your messages; by default the application uses one of the gateway host of Ethereum Swarm.
 
 [Demo](https://bah5qcgza56nnfxjw7tftckrw7xclh67cibcdmzehgtcaihvlnvxohzrc53gq.bzz.link/)
 
