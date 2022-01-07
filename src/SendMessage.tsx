@@ -1,4 +1,4 @@
-import { Bee } from '@ethersphere/bee-js'
+import { Bee, Signer } from '@ethersphere/bee-js'
 import { FormEvent, ReactElement, useState } from 'react'
 import { Button, Form, FormControl, InputGroup, Spinner } from 'react-bootstrap'
 import { encodeMessage, hashTopicForMessage } from './Utils'
@@ -8,7 +8,7 @@ const STAMP_ID = '00000000000000000000000000000000000000000000000000000000000000
 
 interface Prop {
   bee: Bee
-  privKey: Uint8Array
+  privKey: Uint8Array | Signer
   otherEthAddress: string | null
   onSendMessage: (message: MessageFormat) => void
 }

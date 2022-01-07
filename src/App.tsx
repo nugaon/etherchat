@@ -1,21 +1,49 @@
+import type { Signer } from '@ethersphere/bee-js'
 import { Bee, Utils } from '@ethersphere/bee-js'
 import { randomBytes } from 'crypto'
 import Wallet from 'ethereumjs-wallet'
 import React, { ChangeEvent, useEffect, useState } from 'react'
-import { Container, Form, FormControl, Stack } from 'react-bootstrap'
+import { Button, Container, Form, FormControl, Stack } from 'react-bootstrap'
+import Web3Modal, { IProviderOptions } from 'web3modal'
 import './App.css'
 import ListMessages from './Messages'
 import SendMessage from './SendMessage'
+import { prefixAddress } from './Utils'
 
 function App() {
   // # nugaon # mollas # metacertain
   // default bee is pointing to the gateway
   const [bee, setBee] = useState<Bee>(new Bee('https://bee-9.gateway.ethswarm.org'))
-  const [privkey, setPrivkey] = useState<Uint8Array>(randomBytes(32))
+  const [privkeyOrSigner, setPrivkeyOrSigner] = useState<Uint8Array | Signer>(randomBytes(32))
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [otherEthAddress, setOtherEthAddress] = useState<string | null>(null)
   const [myMessages, setMyMessages] = useState<MessageFormat[]>([])
   const [myEthAddress, setMyEthAddress] = useState<string | null>(null)
+  const [walletConnected, setWalletConnected] = useState<boolean>(false)
+
+  const connectWallet = async () => {
+    const providerOptions: IProviderOptions = {
+      /* See Provider Options Section */
+    }
+
+    const web3Modal = new Web3Modal({
+      network: 'mainnet', // optional
+      providerOptions, // required
+    })
+
+    const provider = await web3Modal.connect()
+    const signer = await Utils.makeEthereumWalletSigner(provider)
+    setMyEthAddress(prefixAddress(Utils.bytesToHex(signer.address)))
+    setPrivkeyOrSigner(signer)
+    setWalletConnected(true)
+    setMyMessages([])
+
+    window.ethereum.once('accountsChanged', (accounts: string[]) => {
+      console.log('changed account to', accounts[0])
+      connectWallet()
+      // Time to reload your interface with accounts[0]!
+    })
+  }
 
   // constructor
   useEffect(() => {
@@ -26,7 +54,7 @@ function App() {
 
     /** bytes represent hex keys */
     const setByteKey = (keyBytes: Uint8Array) => {
-      setPrivkey(keyBytes)
+      setPrivkeyOrSigner(keyBytes)
       const wallet = new Wallet(Buffer.from(keyBytes))
       setWallet(wallet)
     }
@@ -81,7 +109,15 @@ function App() {
       <Container className="maincontent">
         <Stack gap={2}>
           <div>Your ETH address is</div>
-          <div className="font-weight-bold">{myEthAddress}</div>
+          <div className="font-weight-bold">
+            <span>{myEthAddress}</span>
+          </div>
+          <div hidden={walletConnected}>
+            <div>OR</div>
+            <div>
+              <Button onClick={() => connectWallet()}>Connect Wallet</Button>
+            </div>
+          </div>
         </Stack>
 
         <hr />
@@ -113,7 +149,7 @@ function App() {
           <SendMessage
             bee={bee}
             otherEthAddress={otherEthAddress}
-            privKey={privkey}
+            privKey={privkeyOrSigner}
             onSendMessage={message => setMyMessages([...myMessages, message])}
           />
         </div>
