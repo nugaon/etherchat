@@ -92,3 +92,7 @@ export function hashTopicForMessage(address: string): Utils.Bytes<32> {
 
   return Utils.keccak256Hash(Utils.hexToBytes(address))
 }
+
+export function prefixAddress(address: string): string {
+  return address.startsWith('0x') ? address : `0x${address}`
+}
