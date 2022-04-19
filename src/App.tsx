@@ -13,7 +13,7 @@ import { prefixAddress } from './Utils'
 function App() {
   // # nugaon # mollas # metacertain
   // default bee is pointing to the gateway
-  const [bee, setBee] = useState<Bee>(new Bee('https://bee-9.gateway.ethswarm.org'))
+  const [bee, setBee] = useState<Bee>(new Bee('https://api.gateway.ethswarm.org'))
   const [privkeyOrSigner, setPrivkeyOrSigner] = useState<Uint8Array | Signer>(randomBytes(32))
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [otherEthAddress, setOtherEthAddress] = useState<string | null>(null)
