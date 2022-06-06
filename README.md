@@ -8,7 +8,7 @@ The messages currently are not encrypted on the P2P network, though the "mining"
 
 The application is compatible with [swarm-extension](https://github.com/ethersphere/swarm-extension) that is handy if you do not want to have a middleman between your messages; by default the application uses one of the gateway host of Ethereum Swarm.
 
-[Demo](https://bah5qcgza56nnfxjw7tftckrw7xclh67cibcdmzehgtcaihvlnvxohzrc53gq.bzz.link/)
+[Demo](https://bah5qcgzaofctmzyiu5fzlwdudriqnk7p657mhce3t7bxceocom3iefnswbyq.bzz.link/)
 
 ## Available Scripts
 
